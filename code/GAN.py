@@ -1,0 +1,3 @@
+"""
+Vanilla GAN
+"""
