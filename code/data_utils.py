@@ -13,7 +13,7 @@ from scipy.io import loadmat
 #             3 --> Passive / neutral
 #     data: The Raw [EEG data of the recording session]
 
-# Returns DF with EEG data for each channe, as well as column for marker
+# Returns DF with EEG data for each channel, as well as column for marker
 def load_patient(file_path, keep_channels=None):
     raw = loadmat(file_path)['o']
     # Make sure sampFreq = 200
