@@ -105,7 +105,7 @@ class GAN(object):
 		"""
 		Generators noise vector
 		"""
-		return Variable(torch.randn(size, 100))
+		return Variable(torch.randn(size, 90))
 
 	def ones_and_zeros(self, size):
 		"""
@@ -171,15 +171,16 @@ class GAN(object):
 
 			for epoch in range(epochs):
 				for n in range(0, len(self.X), batch_size):
-					#reshape into a tensor (1 x num_feat x btach_size)
+
 					batch = torch.from_numpy(self.X[n:n + batch_size, :])
-					N = batch.shape[1]
+					N = batch.shape[0]
 
 					# 1. Train Discriminator
 					real = Variable(batch)
 					# Generate fake data and detach
 					# (so gradients are not calculated for generator)
-					fake = self.G.forward(self.noise(N)).detach()
+					noise = self.noise(N)
+					fake = self.G.forward(noise).detach()
 					# Train D
 					d_error, d_pred_real, d_pred_fake = self.train_disc(real, fake)
 
