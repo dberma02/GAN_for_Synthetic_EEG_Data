@@ -84,10 +84,22 @@ class discriminator(nn.Module):
 		return x
 
 class GAN(object):
-	def __init__(self, data):
+	def __init__(self, data, g_in, g_hid, g_out, d_in, d_hid, d_out):
 
-		self.X_train, self.X_test, self.y_train, self.y_test = train_test_split(data[0], data[1], train_size=0.8, test_size=0.2)
+		#self.X_train, self.X_test, self.y_train, self.y_test = train_test_split(data[0], data[1], train_size=0.8, test_size=0.2)
+		self.X = data[0]
+		self.y = data[1]
 		self.full_synth = True
+		self.g_input_size = g_in  # Random noise dimension coming into generator, per output vector
+		self.g_hidden_size = g_hid  # Generator complexity
+		self.g_output_size = g_out  # Size of generated output vector
+		self.d_input_size = d_in  # Minibatch size - cardinality of distributions
+		self.d_hidden_size = d_hid  # Discriminator complexity
+		self.d_output_size = d_out  # Single dimension for 'real' vs. 'fake' classification
+			# https://github.com/devnag/pytorch-generative-adversarial-networks/blob/master/gan_pytorch.py
+		self.d_learning_rate = 1e-3
+		self.g_learning_rate = 1e-3
+
 
 	def noise(self, size):
 		"""
@@ -107,80 +119,61 @@ class GAN(object):
 
 	def train_disc(self, real, fake):
 		N = real.size(0)
-		# Reset gradients
+
 		self.D_optim.zero_grad()
 		ones, zeros = self.ones_and_zeros(N)
 
-		# 1.1 Train on Real Data
 		real_pred = self.D.train(real)
 
-		# Calculate error and backpropagate
 		error_real = self.loss(real_pred, ones)
 		error_real.backward()
-
-		# 1.2 Train on Fake Data
 		fake_pred = self.D.train(fake)
 
-		# Calculate error and backpropagate
 		fake_err = self.loss(fake_pred, zeros)
 		fake_err.backward()
 
-		# 1.3 Update weights with gradients
 		self.D_optim.step()
 
-		# Return error and predictions for real and fake inputs
 		return error_real + fake_err, real_pred, fake_pred
 
 	def train_generator(self,fake):
 		N = fake.size(0)
-		# Reset gradients
+
 		self.G_optim.zero_grad()
 		ones, zeros = self.ones_and_zeros(N)
 
-		# Sample noise and generate fake data
+
 		prediction = self.D.train(fake)
 
-		# Calculate error and backpropagate
+
 		error = self.loss(prediction, ones)
 		error.backward()
 
-		# Update weights with gradients
 
 		self.G_optim.step()
-
-		# Return error
 		return error
 
 	def train(self, epochs):
 
 		if self.full_synth == True:
-			g_input_size = 1  # Random noise dimension coming into generator, per output vector
-			g_hidden_size = 5  # Generator complexity
-			g_output_size = 1  # Size of generated output vector
-			d_input_size = 100  # Minibatch size - cardinality of distributions
-			d_hidden_size = 10  # Discriminator complexity
-			d_output_size = 1  # Single dimension for 'real' vs. 'fake' classification
-			# https://github.com/devnag/pytorch-generative-adversarial-networks/blob/master/gan_pytorch.py
 
-			d_learning_rate = 1e-3
-			g_learning_rate = 1e-3
+
 			batch_size = 100
-			start = 0
-
-			noise = self.noise(self.X_train.shape[1])
-
-			self.G = gen(g_input_size, g_hidden_size, g_output_size)
-			self.D = discriminator(d_input_size, d_hidden_size, d_output_size)
 
 
-			self.D_optim = optim.SGD(self.D.parameters(), lr=d_learning_rate)
-			self.G_optim = optim.SGD(self.G.parameters(), lr=g_learning_rate)
+			self.G = gen(self.g_input_size, self.g_hidden_size, self.g_output_size)
+			self.D = discriminator(self.d_input_size, self.d_hidden_size, self.d_output_size)
+
+
+			self.D_optim = optim.SGD(self.D.parameters(), lr=self.d_learning_rate)
+			self.G_optim = optim.SGD(self.G.parameters(), lr=self.g_learning_rate)
 			self.loss = nn.BCELoss()
 
 			for epoch in range(epochs):
-				for n in range(0, len(self.X_train), batch_size):
-					batch = torch.from_numpy(self.X_train[n:n + batch_size, :])
-					N = batch.shape[0]
+				for n in range(0, len(self.X), batch_size):
+					#reshape into a tensor (1 x num_feat x btach_size)
+					batch = torch.from_numpy(self.X[n:n + batch_size, :])
+					N = batch.shape[1]
 
 					# 1. Train Discriminator
 					real = Variable(batch)
