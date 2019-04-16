@@ -89,6 +89,7 @@ class GAN(object):
 		#self.X_train, self.X_test, self.y_train, self.y_test = train_test_split(data[0], data[1], train_size=0.8, test_size=0.2)
 		self.X = data[0]
 		self.y = data[1]
+		self.num_features = self.y.shape[1]
 		self.full_synth = True
 		self.g_input_size = g_in  # Random noise dimension coming into generator, per output vector
 		self.g_hidden_size = g_hid  # Generator complexity
@@ -105,7 +106,7 @@ class GAN(object):
 		"""
 		Generators noise vector
 		"""
-		return Variable(torch.randn(size, 90))
+		return Variable(torch.randn(size, self.num_features))
 
 	def ones_and_zeros(self, size):
 		"""
