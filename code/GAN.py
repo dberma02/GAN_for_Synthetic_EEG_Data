@@ -6,6 +6,8 @@ import torch.nn as nn
 import torch.optim as optim
 from torch.autograd import Variable
 from sklearn.model_selection import train_test_split
+import matplotlib.pyplot as plt
+
 
 class gen(nn.Module):
 
@@ -105,6 +107,7 @@ class GAN(object):
 			# https://github.com/devnag/pytorch-generative-adversarial-networks/blob/master/gan_pytorch.py
 		self.d_learning_rate = 1e-3
 		self.g_learning_rate = 1e-3
+		self.batch_size = 100
 
 
 	def noise(self, size):
@@ -159,12 +162,16 @@ class GAN(object):
 		self.G_optim.step()
 		return error
 
+	def plot(self, g, d):
+		plt.title('Loss')
+		plt.plot(g,'b--',label='Generative')
+		plt.plot( d, 'r--', label='Discriminative')
+		plt.legend()
+		plt.show()
+
 	def train(self, epochs):
 
 		if self.full_synth == True:
-
-
-			batch_size = 100
 
 
 			self.G = gen(self.g_input_size, self.g_hidden_size, self.g_output_size)
@@ -174,31 +181,31 @@ class GAN(object):
 			self.D_optim = optim.SGD(self.D.parameters(), lr=self.d_learning_rate)
 			self.G_optim = optim.SGD(self.G.parameters(), lr=self.g_learning_rate)
 			self.loss = nn.BCELoss()
-
+			g_err = []
+			d_err = []
 			for epoch in range(epochs):
-				for n in range(0, len(self.X), batch_size):
+				for n in range(0, len(self.X), self.batch_size):
 
-					batch = torch.from_numpy(self.X[n:n + batch_size, :])
+					batch = torch.from_numpy(self.X[n:n + self.batch_size, :])
 					N = batch.shape[0]
 
-					# 1. Train Discriminator
+					# Train Discriminator
 					real = Variable(batch)
-					# Generate fake data and detach
-					# (so gradients are not calculated for generator)
+
 					noise = self.noise(N)
 					fake = self.G.forward(noise).detach()
-					# Train D
-					d_error, d_pred_real, d_pred_fake = self.train_disc(real, fake)
 
-					# 2. Train Generator
-					# Generate fake data
+					d_error, d_pred_r, d_pred_f = self.train_disc(real, fake)
+
+					# Train Generator
+
 					fake = self.G.forward(self.noise(N))
 					# Train G
 					g_error = self.train_generator(fake)
 					# Log batch error
 
-					# Display Progress every few batches
+				g_err.append(g_error)
+				d_err.append(d_error)
 
+			self.plot(g_err,d_err)
 
-
-			#https://github.com/znxlwm/pytorch-generative-model-collections/blob/master/GAN.py
