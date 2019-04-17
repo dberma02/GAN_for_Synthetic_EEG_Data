@@ -45,7 +45,7 @@ class gen(nn.Module):
 	def forward(self, x):
 		x = x.float()
 		x = self.net(x)
-		x = nn.functional.sigmoid(x)
+		x = torch.sigmoid(x)
 		return x
 
 class discriminator(nn.Module):
@@ -85,7 +85,7 @@ class discriminator(nn.Module):
 	def forward(self, x):
 		x = x.float()
 		x = self.net(x)
-		x = nn.functional.sigmoid(x)
+		x = torch.sigmoid(x)
 		return x
 
 class GAN(object):
@@ -149,7 +149,7 @@ class GAN(object):
 		ones, zeros = self.ones_and_zeros(N)
 
 
-		prediction = self.D.train(fake)
+		prediction = self.D.forward(fake)
 
 
 		error = self.loss(prediction, ones)
