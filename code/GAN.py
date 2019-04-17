@@ -98,13 +98,12 @@ class GAN(object):
 		self.y = data[1]
 		self.num_features = self.X.shape[1]
 		self.full_synth = True
-		self.g_input_size = g_in  # Random noise dimension coming into generator, per output vector
-		self.g_hidden_size = g_hid  # Generator complexity
-		self.g_output_size = g_out  # Size of generated output vector
-		self.d_input_size = d_in  # Minibatch size - cardinality of distributions
-		self.d_hidden_size = d_hid  # Discriminator complexity
-		self.d_output_size = d_out  # Single dimension for 'real' vs. 'fake' classification
-			# https://github.com/devnag/pytorch-generative-adversarial-networks/blob/master/gan_pytorch.py
+		self.g_input_size = g_in
+		self.g_hidden_size = g_hid
+		self.g_output_size = g_out
+		self.d_input_size = d_in
+		self.d_hidden_size = d_hid
+		self.d_output_size = d_out
 		self.d_learning_rate = 1e-3
 		self.g_learning_rate = 1e-3
 		self.batch_size = 100
@@ -150,16 +149,11 @@ class GAN(object):
 
 		self.G_optim.zero_grad()
 		ones, zeros = self.ones_and_zeros(N)
-
-
 		prediction = self.D.forward(fake)
-
-
 		error = self.loss(prediction, ones)
 		error.backward()
-
-
 		self.G_optim.step()
+
 		return error
 
 	def plot(self, g, d):
@@ -173,16 +167,16 @@ class GAN(object):
 
 		if self.full_synth == True:
 
-
 			self.G = gen(self.g_input_size, self.g_hidden_size, self.g_output_size)
 			self.D = discriminator(self.d_input_size, self.d_hidden_size, self.d_output_size)
-
 
 			self.D_optim = optim.SGD(self.D.parameters(), lr=self.d_learning_rate)
 			self.G_optim = optim.SGD(self.G.parameters(), lr=self.g_learning_rate)
 			self.loss = nn.BCELoss()
+
 			g_err = []
 			d_err = []
+
 			for epoch in range(epochs):
 				for n in range(0, len(self.X), self.batch_size):
 
@@ -198,11 +192,9 @@ class GAN(object):
 					d_error, d_pred_r, d_pred_f = self.train_disc(real, fake)
 
 					# Train Generator
-
 					fake = self.G.forward(self.noise(N))
-					# Train G
 					g_error = self.train_generator(fake)
-					# Log batch error
+
 
 				g_err.append(g_error)
 				d_err.append(d_error)
