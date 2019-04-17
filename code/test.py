@@ -24,5 +24,5 @@ print(X.shape)
 
 X_train, X_test, y_train, y_test = train_test_split(X, y, train_size=0.8, test_size=0.2)
 
-gan = GAN.GAN((X,y), g_in = X.shape[1], g_hid = X.shape[1], g_out = 2, d_in = X.shape[1], d_hid = X.shape[1], d_out = 2)
+gan = GAN.GAN((X,y), g_in = X.shape[1], g_hid = X.shape[1], g_out = 1, d_in = X.shape[1], d_hid = X.shape[1], d_out = 1)
 gan.train(10)

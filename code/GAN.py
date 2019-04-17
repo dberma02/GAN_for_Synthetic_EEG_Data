@@ -19,6 +19,7 @@ class gen(nn.Module):
 		self.layer2 = nn.Linear(hid_size, hid_size)
 		self.layer3 = nn.Linear(hid_size, out_size)
 
+
 		self.make_network()
 
 	def make_network(self):
@@ -42,7 +43,9 @@ class gen(nn.Module):
 		                         self.layer3)
 
 	def forward(self, x):
+		x = x.float()
 		x = self.net(x)
+		x = nn.functional.sigmoid(x)
 		return x
 
 class discriminator(nn.Module):
@@ -80,7 +83,9 @@ class discriminator(nn.Module):
 
 
 	def forward(self, x):
+		x = x.float()
 		x = self.net(x)
+		x = nn.functional.sigmoid(x)
 		return x
 
 class GAN(object):
@@ -124,11 +129,11 @@ class GAN(object):
 		self.D_optim.zero_grad()
 		ones, zeros = self.ones_and_zeros(N)
 
-		real_pred = self.D.train(real)
+		real_pred = self.D.forward(real)
 
 		error_real = self.loss(real_pred, ones)
 		error_real.backward()
-		fake_pred = self.D.train(fake)
+		fake_pred = self.D.forward(fake)
 
 		fake_err = self.loss(fake_pred, zeros)
 		fake_err.backward()
