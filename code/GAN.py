@@ -9,7 +9,7 @@ from sklearn.model_selection import train_test_split
 
 class gen(nn.Module):
 
-	def __init__(self, in_size, out_size, hid_size):
+	def __init__(self, in_size, hid_size, out_size):
 		super(gen,self).__init__()
 		self.in_size = in_size
 		self.out_size = out_size
@@ -46,7 +46,7 @@ class gen(nn.Module):
 		return x
 
 class discriminator(nn.Module):
-	def __init__(self, in_size, out_size, hid_size):
+	def __init__(self, in_size, hid_size, out_size):
 		super(discriminator,self).__init__()
 		self.in_size = in_size
 		self.out_size = out_size
@@ -89,7 +89,7 @@ class GAN(object):
 		#self.X_train, self.X_test, self.y_train, self.y_test = train_test_split(data[0], data[1], train_size=0.8, test_size=0.2)
 		self.X = data[0]
 		self.y = data[1]
-		self.num_features = self.y.shape[1]
+		self.num_features = self.X.shape[1]
 		self.full_synth = True
 		self.g_input_size = g_in  # Random noise dimension coming into generator, per output vector
 		self.g_hidden_size = g_hid  # Generator complexity
