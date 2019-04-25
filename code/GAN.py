@@ -2,6 +2,7 @@
 Vanilla GAN
 """
 import torch
+import numpy as np
 import torch.nn as nn
 import torch.optim as optim
 from torch.autograd import Variable
@@ -17,11 +18,8 @@ class gen(nn.Module):
 		self.out_size = out_size
 		self.hid_size = hid_size
 		self.layer1 = nn.Linear(in_size, hid_size)
-
 		self.layer2 = nn.Linear(hid_size, hid_size)
 		self.layer3 = nn.Linear(hid_size, out_size)
-
-
 		self.make_network()
 
 	def make_network(self):
@@ -57,7 +55,6 @@ class discriminator(nn.Module):
 		self.out_size = out_size
 		self.hid_size = hid_size
 		self.layer1 = nn.Linear(in_size, hid_size)
-
 		self.layer2 = nn.Linear(hid_size, hid_size)
 		self.layer3 = nn.Linear(hid_size, out_size)
 
@@ -201,3 +198,11 @@ class GAN(object):
 
 			self.plot(g_err,d_err)
 
+	def generate_data(self, num_samples):
+		# working on getting this into the right form (currently outputing a list of tensors)
+		samples = []
+
+		for n in range(num_samples):
+			samples.append(self.G.forward(self.noise(1)).detach().numpy())
+
+		return np.asarray(samples)
