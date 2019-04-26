@@ -19,7 +19,8 @@ class gen(nn.Module):
 		self.hid_size = hid_size
 		self.layer1 = nn.Linear(in_size, hid_size)
 		self.layer2 = nn.Linear(hid_size, hid_size)
-		self.layer3 = nn.Linear(hid_size, out_size)
+		self.layer3 = nn.Linear(hid_size, hid_size)
+		self.layer4 = nn.Linear(hid_size, out_size)
 		self.make_network()
 
 	def make_network(self):
@@ -39,8 +40,12 @@ class gen(nn.Module):
 		"""
 
 		self.net = nn.Sequential(self.layer1,
-		                         self.layer2,
-		                         self.layer3)
+                                         nn.LeakyReLU(),
+					 self.layer2,
+                                         nn.LeakyReLU(),
+					 self.layer3,
+                                         nn.LeakyReLU(),
+		                         self.layer4)
 
 	def forward(self, x):
 		x = x.float()
@@ -76,8 +81,20 @@ class discriminator(nn.Module):
 		                         )
 		"""
 
+# 		self.net = nn.Sequential(self.layer1,
+# 		                         self.layer2,
+# 		                         self.layer3)
+# 		self.net = nn.Sequential(self.layer1,
+#                                          nn.LeakyReLU(),
+# 		                         self.layer2,
+#                                          nn.LeakyReLU(),
+# 		                         self.layer3)
 		self.net = nn.Sequential(self.layer1,
-		                         self.layer2,
+                                         nn.LeakyReLU(),
+					 nn.Dropout(p=0.6),
+					 self.layer2,
+                                         nn.LeakyReLU(),
+					 nn.Dropout(p=0.6),
 		                         self.layer3)
 
 
@@ -121,18 +138,27 @@ class GAN(object):
 		zeros = Variable(torch.zeros(size, 1))
 
 		return ones,zeros
-
+	
+	def soft_labels(self, size):
+# 	    ones = Variable(torch.from_numpy(np.random.uniform(0.9,1.0,size).astype(float)))
+# 	    zeros = Variable(torch.from_numpy(np.random.uniform(0.0,0.1,size).astype(float)))
+	    ones = Variable(torch.rand(size, 1) * 0.1 + 0.9)
+	    zeros = Variable(torch.rand(size, 1) * 0.1)
+	    return ones, zeros
 
 	def train_disc(self, real, fake):
 		N = real.size(0)
 
 		self.D_optim.zero_grad()
-		ones, zeros = self.ones_and_zeros(N)
-
+# 		ones, zeros = self.ones_and_zeros(N)
+		ones, zeros = self.soft_labels(N)
+		ones = ones.view(-1,1)
+		zeros = zeros.view(-1,1)
 		real_pred = self.D.forward(real)
 
 		# changed error_real to loss_real and fake_err to loss_fake
 		# for clarity
+
 		loss_real = self.loss(real_pred, ones)
 		loss_real.backward()	    
 		fake_pred = self.D.forward(fake)
@@ -170,13 +196,15 @@ class GAN(object):
 			self.D = discriminator(self.d_input_size, self.d_hidden_size, self.d_output_size)
 
 			self.D_optim = optim.SGD(self.D.parameters(), lr=self.d_learning_rate)
-			self.G_optim = optim.SGD(self.G.parameters(), lr=self.g_learning_rate)
+			self.G_optim = optim.Adam(self.G.parameters(), lr=self.g_learning_rate)
 			self.loss = nn.BCELoss()
 
 			g_err = []
 			d_err = []
 
+                        # epoch is one time seeing all data
 			for epoch in range(epochs):
+
 # 				print("epoch {} / {}".format(epoch, epochs))
 				for n in range(0, len(self.X), self.batch_size):
 
@@ -198,7 +226,7 @@ class GAN(object):
 
 				g_err.append(g_error.item())
 				d_err.append(d_error.item())
-			self.plot(g_err,d_err)
+			self.plot(g_err, d_err)
 
 	def generate_data(self, num_samples):
 		# working on getting this into the right form (currently outputing a list of tensors)
