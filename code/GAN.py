@@ -90,6 +90,7 @@ class discriminator(nn.Module):
 class GAN(object):
 	def __init__(self, data, g_in, g_hid, g_out, d_in, d_hid, d_out):
 
+		plt.plot()
 		#self.X_train, self.X_test, self.y_train, self.y_test = train_test_split(data[0], data[1], train_size=0.8, test_size=0.2)
 		self.X = data[0]
 		self.y = data[1]
@@ -130,16 +131,18 @@ class GAN(object):
 
 		real_pred = self.D.forward(real)
 
-		error_real = self.loss(real_pred, ones)
-		error_real.backward()
+		# changed error_real to loss_real and fake_err to loss_fake
+		# for clarity
+		loss_real = self.loss(real_pred, ones)
+		loss_real.backward()	    
 		fake_pred = self.D.forward(fake)
 
-		fake_err = self.loss(fake_pred, zeros)
-		fake_err.backward()
+		loss_fake = self.loss(fake_pred, zeros)
+		loss_fake.backward()
 
 		self.D_optim.step()
 
-		return error_real + fake_err, real_pred, fake_pred
+		return loss_real + loss_fake, real_pred, fake_pred
 
 	def train_generator(self,fake):
 		N = fake.size(0)
@@ -147,11 +150,11 @@ class GAN(object):
 		self.G_optim.zero_grad()
 		ones, zeros = self.ones_and_zeros(N)
 		prediction = self.D.forward(fake)
-		error = self.loss(prediction, ones)
-		error.backward()
+		loss = self.loss(prediction, ones)
+		loss.backward()
 		self.G_optim.step()
 
-		return error
+		return loss
 
 	def plot(self, g, d):
 		plt.title('Loss')
@@ -159,9 +162,8 @@ class GAN(object):
 		plt.plot( d, 'r--', label='Discriminative')
 		plt.legend()
 		plt.show()
-
+	
 	def train(self, epochs):
-
 		if self.full_synth == True:
 
 			self.G = gen(self.g_input_size, self.g_hidden_size, self.g_output_size)
@@ -175,6 +177,7 @@ class GAN(object):
 			d_err = []
 
 			for epoch in range(epochs):
+# 				print("epoch {} / {}".format(epoch, epochs))
 				for n in range(0, len(self.X), self.batch_size):
 
 					batch = torch.from_numpy(self.X[n:n + self.batch_size, :])
@@ -193,9 +196,8 @@ class GAN(object):
 					g_error = self.train_generator(fake)
 
 
-				g_err.append(g_error)
-				d_err.append(d_error)
-
+				g_err.append(g_error.item())
+				d_err.append(d_error.item())
 			self.plot(g_err,d_err)
 
 	def generate_data(self, num_samples):

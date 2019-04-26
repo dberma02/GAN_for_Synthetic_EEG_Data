@@ -21,6 +21,7 @@ def load_patient(file_path, keep_channels=None):
     assert(raw['sampFreq'][0][0][0][0] == 200)
     marker = pd.Series(raw['marker'][0][0].flatten())
     chnames = [elem[0][0] for elem in raw['chnames'][0][0]]
+#     print("CHANNEL NAMES: ",chnames)
     data = raw['data'][0][0]
     df = pd.DataFrame(data, columns=chnames)
     if keep_channels != None:
