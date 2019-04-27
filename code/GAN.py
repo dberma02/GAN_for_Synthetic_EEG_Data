@@ -20,7 +20,8 @@ class gen(nn.Module):
 		self.layer1 = nn.Linear(in_size, hid_size)
 		self.layer2 = nn.Linear(hid_size, hid_size)
 		self.layer3 = nn.Linear(hid_size, hid_size)
-		self.layer4 = nn.Linear(hid_size, out_size)
+		self.layer4 = nn.Linear(hid_size, hid_size)
+		self.layer5 = nn.Linear(hid_size, out_size)
 		self.make_network()
 
 	def make_network(self):
@@ -45,7 +46,9 @@ class gen(nn.Module):
                                          nn.LeakyReLU(),
 					 self.layer3,
                                          nn.LeakyReLU(),
-		                         self.layer4)
+					 self.layer4,
+                                         nn.LeakyReLU(),
+		                         self.layer5)
 
 	def forward(self, x):
 		x = x.float()
@@ -84,18 +87,19 @@ class discriminator(nn.Module):
 # 		self.net = nn.Sequential(self.layer1,
 # 		                         self.layer2,
 # 		                         self.layer3)
-# 		self.net = nn.Sequential(self.layer1,
-#                                          nn.LeakyReLU(),
-# 		                         self.layer2,
-#                                          nn.LeakyReLU(),
-# 		                         self.layer3)
 		self.net = nn.Sequential(self.layer1,
                                          nn.LeakyReLU(),
-					 nn.Dropout(p=0.6),
-					 self.layer2,
+		                         self.layer2,
                                          nn.LeakyReLU(),
-					 nn.Dropout(p=0.6),
 		                         self.layer3)
+		print("no dropout")
+# 		self.net = nn.Sequential(self.layer1,
+#                                          nn.LeakyReLU(),
+# # 					 nn.Dropout(p=0.6),
+# 					 self.layer2,
+#                                          nn.LeakyReLU(),
+# # 					 nn.Dropout(p=0.6),
+# 		                         self.layer3)
 
 
 	def forward(self, x):
@@ -204,6 +208,10 @@ class GAN(object):
 
                         # epoch is one time seeing all data
 			for epoch in range(epochs):
+
+				# TODO
+				# Add code to print output as training (maybe every 1000 epochs)
+				# Can modify the plot_real_and_syn from experiments
 
 # 				print("epoch {} / {}".format(epoch, epochs))
 				for n in range(0, len(self.X), self.batch_size):
