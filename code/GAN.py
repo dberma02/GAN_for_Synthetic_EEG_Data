@@ -209,9 +209,9 @@ class GAN(object):
 			self.G = gen(self.g_input_size, self.g_hidden_size, self.g_output_size)
 			self.D = discriminator(self.d_input_size, self.d_hidden_size, self.d_output_size)
 
-			print("SGD")
-			self.D_optim = optim.SGD(self.D.parameters(), lr=self.d_learning_rate)
-			self.G_optim = optim.SGD(self.G.parameters(), lr=self.g_learning_rate)
+			print("Adam")
+			self.D_optim = optim.Adam(self.D.parameters(), lr=self.d_learning_rate)
+			self.G_optim = optim.Adam(self.G.parameters(), lr=self.g_learning_rate)
 			self.loss = nn.BCELoss()
 
 			static_noise = self.noise(100)
@@ -246,6 +246,7 @@ class GAN(object):
 				if display_progress and (epoch % 1000 == 0):
 					test_samples = self.G.forward(static_noise).detach().numpy()
 					self.progress(test_samples, epoch)
+					self.plot(g_err, d_err)
 
 			self.plot(g_err, d_err)
 
