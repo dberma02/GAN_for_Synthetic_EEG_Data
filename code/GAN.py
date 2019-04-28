@@ -53,7 +53,7 @@ class gen(nn.Module):
 	def forward(self, x):
 		x = x.float()
 		x = self.net(x)
-		x = torch.sigmoid(x)
+# 		x = torch.sigmoid(x)
 		return x
 
 class discriminator(nn.Module):
@@ -87,18 +87,18 @@ class discriminator(nn.Module):
 # 		self.net = nn.Sequential(self.layer1,
 # 		                         self.layer2,
 # 		                         self.layer3)
-		self.net = nn.Sequential(self.layer1,
-                                         nn.LeakyReLU(),
-		                         self.layer2,
-                                         nn.LeakyReLU(),
-		                         self.layer3)
 # 		self.net = nn.Sequential(self.layer1,
 #                                          nn.LeakyReLU(),
-# # 					 nn.Dropout(p=0.6),
-# 					 self.layer2,
+# 		                         self.layer2,
 #                                          nn.LeakyReLU(),
-# # 					 nn.Dropout(p=0.6),
 # 		                         self.layer3)
+		self.net = nn.Sequential(self.layer1,
+                                         nn.LeakyReLU(),
+					 nn.Dropout(p=0.6),
+					 self.layer2,
+                                         nn.LeakyReLU(),
+					 nn.Dropout(p=0.6),
+		                         self.layer3)
 
 
 	def forward(self, x):
@@ -122,8 +122,8 @@ class GAN(object):
 		self.d_input_size = d_in
 		self.d_hidden_size = d_hid
 		self.d_output_size = d_out
-		self.d_learning_rate = 1e-3
-		self.g_learning_rate = 1e-3
+		self.d_learning_rate = 1e-25
+		self.g_learning_rate = 1e-25
 		self.batch_size = 100
 
 
@@ -201,14 +201,17 @@ class GAN(object):
 		plt.legend()
 		plt.show()
 	
-	def train(self, epochs, display_progress=False):
+	def train(self, epochs, display_progress=False, d_learning_rate=1e-2, g_learning_rate=1e-2):
 		if self.full_synth == True:
-
+			self.d_learning_rate = d_learning_rate
+			self.g_learning_rate = g_learning_rate
+			
 			self.G = gen(self.g_input_size, self.g_hidden_size, self.g_output_size)
 			self.D = discriminator(self.d_input_size, self.d_hidden_size, self.d_output_size)
 
+			print("SGD")
 			self.D_optim = optim.SGD(self.D.parameters(), lr=self.d_learning_rate)
-			self.G_optim = optim.Adam(self.G.parameters(), lr=self.g_learning_rate)
+			self.G_optim = optim.SGD(self.G.parameters(), lr=self.g_learning_rate)
 			self.loss = nn.BCELoss()
 
 			static_noise = self.noise(100)
