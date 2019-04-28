@@ -20,7 +20,8 @@ class gen(nn.Module):
 		self.layer1 = nn.Linear(in_size, hid_size)
 		self.layer2 = nn.Linear(hid_size, hid_size)
 		self.layer3 = nn.Linear(hid_size, hid_size)
-		self.layer4 = nn.Linear(hid_size, out_size)
+		self.layer4 = nn.Linear(hid_size, hid_size)
+		self.layer5 = nn.Linear(hid_size, out_size)
 		self.make_network()
 
 	def make_network(self):
@@ -45,7 +46,9 @@ class gen(nn.Module):
                                          nn.LeakyReLU(),
 					 self.layer3,
                                          nn.LeakyReLU(),
-		                         self.layer4)
+					 self.layer4,
+                                         nn.LeakyReLU(),
+		                         self.layer5)
 
 	def forward(self, x):
 		x = x.float()
@@ -84,18 +87,18 @@ class discriminator(nn.Module):
 # 		self.net = nn.Sequential(self.layer1,
 # 		                         self.layer2,
 # 		                         self.layer3)
-# 		self.net = nn.Sequential(self.layer1,
-#                                          nn.LeakyReLU(),
-# 		                         self.layer2,
-#                                          nn.LeakyReLU(),
-# 		                         self.layer3)
 		self.net = nn.Sequential(self.layer1,
                                          nn.LeakyReLU(),
-					 nn.Dropout(p=0.6),
-					 self.layer2,
+		                         self.layer2,
                                          nn.LeakyReLU(),
-					 nn.Dropout(p=0.6),
 		                         self.layer3)
+# 		self.net = nn.Sequential(self.layer1,
+#                                          nn.LeakyReLU(),
+# # 					 nn.Dropout(p=0.6),
+# 					 self.layer2,
+#                                          nn.LeakyReLU(),
+# # 					 nn.Dropout(p=0.6),
+# 		                         self.layer3)
 
 
 	def forward(self, x):
@@ -128,7 +131,8 @@ class GAN(object):
 		"""
 		Generators noise vector
 		"""
-		return Variable(torch.randn(size, self.num_features))
+# 		return Variable(torch.randn(size, self.num_features))
+		return Variable(torch.randn(size, self.g_input_size))
 
 	def ones_and_zeros(self, size):
 		"""
@@ -140,20 +144,28 @@ class GAN(object):
 		return ones,zeros
 	
 	def soft_labels(self, size):
-# 	    ones = Variable(torch.from_numpy(np.random.uniform(0.9,1.0,size).astype(float)))
-# 	    zeros = Variable(torch.from_numpy(np.random.uniform(0.0,0.1,size).astype(float)))
-	    ones = Variable(torch.rand(size, 1) * 0.1 + 0.9)
-	    zeros = Variable(torch.rand(size, 1) * 0.1)
-	    return ones, zeros
+		ones = Variable(torch.rand(size, 1) * 0.1 + 0.9)
+		zeros = Variable(torch.rand(size, 1) * 0.1)
+		return ones, zeros
+
+	def plot_window(self, x, y, epoch):
+		fig, ax = plt.subplots()
+		ax.plot(x, y, color="red")
+		plt.title("Mean Synthetic Data at Epoch {}".format(epoch)) 
+		plt.xlabel("Time (sec)")
+		plt.ylabel("ERP")
+		plt.show()
+
+	def progress(self, syn_data, epoch):
+		avg_syn = np.mean(syn_data, axis=0)
+		seconds = np.linspace(.15, .15 + .45, np.ceil(.45 / 0.005).astype(int))
+		self.plot_window(seconds, avg_syn, epoch)
 
 	def train_disc(self, real, fake):
 		N = real.size(0)
-
 		self.D_optim.zero_grad()
 # 		ones, zeros = self.ones_and_zeros(N)
 		ones, zeros = self.soft_labels(N)
-		ones = ones.view(-1,1)
-		zeros = zeros.view(-1,1)
 		real_pred = self.D.forward(real)
 
 		# changed error_real to loss_real and fake_err to loss_fake
@@ -189,7 +201,7 @@ class GAN(object):
 		plt.legend()
 		plt.show()
 	
-	def train(self, epochs):
+	def train(self, epochs, display_progress=False):
 		if self.full_synth == True:
 
 			self.G = gen(self.g_input_size, self.g_hidden_size, self.g_output_size)
@@ -198,6 +210,8 @@ class GAN(object):
 			self.D_optim = optim.SGD(self.D.parameters(), lr=self.d_learning_rate)
 			self.G_optim = optim.Adam(self.G.parameters(), lr=self.g_learning_rate)
 			self.loss = nn.BCELoss()
+
+			static_noise = self.noise(100)
 
 			g_err = []
 			d_err = []
@@ -223,9 +237,13 @@ class GAN(object):
 					fake = self.G.forward(self.noise(N))
 					g_error = self.train_generator(fake)
 
-
 				g_err.append(g_error.item())
 				d_err.append(d_error.item())
+
+				if display_progress and (epoch % 1000 == 0):
+					test_samples = self.G.forward(static_noise).detach().numpy()
+					self.progress(test_samples, epoch)
+
 			self.plot(g_err, d_err)
 
 	def generate_data(self, num_samples):
