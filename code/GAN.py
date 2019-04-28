@@ -122,8 +122,8 @@ class GAN(object):
 		self.d_input_size = d_in
 		self.d_hidden_size = d_hid
 		self.d_output_size = d_out
-		self.d_learning_rate = 1e-25
-		self.g_learning_rate = 1e-25
+		self.d_learning_rate = 1e-2
+		self.g_learning_rate = 1e-2
 		self.batch_size = 100
 
 
@@ -209,12 +209,12 @@ class GAN(object):
 			self.G = gen(self.g_input_size, self.g_hidden_size, self.g_output_size)
 			self.D = discriminator(self.d_input_size, self.d_hidden_size, self.d_output_size)
 
-			print("Adam")
+			print("REALLY REALLY Adam")
 			self.D_optim = optim.Adam(self.D.parameters(), lr=self.d_learning_rate)
-			self.G_optim = optim.Adam(self.G.parameters(), lr=self.g_learning_rate)
+			self.G_optim = optim.SGD(self.G.parameters(), lr=self.g_learning_rate)
 			self.loss = nn.BCELoss()
 
-			static_noise = self.noise(100)
+			static_noise = self.noise(200)
 
 			g_err = []
 			d_err = []
