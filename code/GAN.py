@@ -99,6 +99,16 @@ class discriminator(nn.Module):
                                          nn.LeakyReLU(),
 					 nn.Dropout(p=0.6),
 		                         self.layer3)
+# 		self.net = nn.Sequential(self.layer1,
+#                                          nn.LeakyReLU(),
+# 					 nn.Dropout(p=0.6),
+# 					 self.layer2,
+#                                          nn.LeakyReLU(),
+# 					 nn.Dropout(p=0.6),
+# 					 self.layer3,
+#                                          nn.LeakyReLU(),
+# 					 nn.Dropout(p=0.6),
+# 		                         self.layer4)
 
 
 	def forward(self, x):
@@ -196,8 +206,8 @@ class GAN(object):
 
 	def plot(self, g, d):
 		plt.title('Loss')
+		plt.plot(d, 'r--', label='Discriminative')
 		plt.plot(g,'b--',label='Generative')
-		plt.plot( d, 'r--', label='Discriminative')
 		plt.legend()
 		plt.show()
 	
@@ -209,9 +219,8 @@ class GAN(object):
 			self.G = gen(self.g_input_size, self.g_hidden_size, self.g_output_size)
 			self.D = discriminator(self.d_input_size, self.d_hidden_size, self.d_output_size)
 
-			print("REALLY REALLY Adam")
 			self.D_optim = optim.Adam(self.D.parameters(), lr=self.d_learning_rate)
-			self.G_optim = optim.Adam(self.G.parameters(), lr=self.g_learning_rate)
+			self.G_optim = optim.SGD(self.G.parameters(), lr=self.g_learning_rate)
 			self.loss = nn.BCELoss()
 
 			static_noise = self.noise(200)
