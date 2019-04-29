@@ -211,7 +211,7 @@ class GAN(object):
 
 			print("REALLY REALLY Adam")
 			self.D_optim = optim.Adam(self.D.parameters(), lr=self.d_learning_rate)
-			self.G_optim = optim.SGD(self.G.parameters(), lr=self.g_learning_rate)
+			self.G_optim = optim.Adam(self.G.parameters(), lr=self.g_learning_rate)
 			self.loss = nn.BCELoss()
 
 			static_noise = self.noise(200)
