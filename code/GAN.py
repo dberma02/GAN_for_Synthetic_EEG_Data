@@ -206,6 +206,7 @@ class GAN(object):
 
 	def plot(self, g, d):
 		plt.title('Loss')
+		plt.suptitle('Training size:' + str(self.X.shape[0]))
 		plt.plot(d, 'r--', label='Discriminative')
 		plt.plot(g,'b--',label='Generative')
 		plt.legend()
@@ -228,10 +229,10 @@ class GAN(object):
 			g_err = []
 			d_err = []
 
-                        # epoch is one time seeing all data
+			# epoch is one time seeing all data
 			for epoch in range(epochs):
 
-# 				print("epoch {} / {}".format(epoch, epochs))
+				# print("epoch {} / {}".format(epoch, epochs))
 				for n in range(0, len(self.X), self.batch_size):
 
 					batch = torch.from_numpy(self.X[n:n + self.batch_size, :])
