@@ -39,7 +39,7 @@ class gen(nn.Module):
 						self.layer3
 		                         )
 		"""
-
+    
 		self.net = nn.Sequential(self.layer1,
                                          nn.LeakyReLU(),
 					 self.layer2,
@@ -158,6 +158,11 @@ class GAN(object):
 		zeros = Variable(torch.rand(size, 1) * 0.1)
 		return ones, zeros
 
+	def soft_labels_2(self, size):
+		ones = Variable(torch.ones(size, 1) * 0.9)
+		zeros = Variable(torch.ones(size, 1) * 0.1)
+		return ones, zeros
+
 	def plot_window(self, x, y, epoch):
 		fig, ax = plt.subplots()
 		ax.plot(x, y, color="red")
@@ -175,7 +180,8 @@ class GAN(object):
 		N = real.size(0)
 		self.D_optim.zero_grad()
 # 		ones, zeros = self.ones_and_zeros(N)
-		ones, zeros = self.soft_labels(N)
+# 		ones, zeros = self.soft_labels(N)
+		ones, zeros = self.soft_labels_2(N)
 		real_pred = self.D.forward(real)
 
 		# changed error_real to loss_real and fake_err to loss_fake
@@ -223,7 +229,7 @@ class GAN(object):
 			self.G_optim = optim.SGD(self.G.parameters(), lr=self.g_learning_rate)
 			self.loss = nn.BCELoss()
 
-			static_noise = self.noise(200)
+			static_noise = self.noise(300)
 
 			g_err = []
 			d_err = []
@@ -252,7 +258,7 @@ class GAN(object):
 				g_err.append(g_error.item())
 				d_err.append(d_error.item())
 
-				if display_progress and (epoch % 1000 == 0):
+				if display_progress and (epoch % 250 == 0):
 					test_samples = self.G.forward(static_noise).detach().numpy()
 					self.progress(test_samples, epoch)
 					self.plot(g_err, d_err)
