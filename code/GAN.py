@@ -135,13 +135,15 @@ class GAN(object):
 		self.d_learning_rate = 1e-2
 		self.g_learning_rate = 1e-2
 		self.batch_size = 100
+		self.converge_exp = False
+		self.samples = []
 
 
 	def noise(self, size):
 		"""
 		Generators noise vector
 		"""
-# 		return Variable(torch.randn(size, self.num_features))
+
 		return Variable(torch.randn(size, self.g_input_size))
 
 	def ones_and_zeros(self, size):
@@ -211,8 +213,7 @@ class GAN(object):
 		return loss
 
 	def plot(self, g, d):
-		plt.title('Loss')
-		plt.suptitle('Training size:' + str(self.X.shape[0]))
+		plt.title('Loss: Training size' + str(self.X.shape[0]))
 		plt.plot(d, 'r--', label='Discriminative')
 		plt.plot(g,'b--',label='Generative')
 		plt.legend()
@@ -264,7 +265,13 @@ class GAN(object):
 					self.progress(test_samples, epoch)
 					self.plot(g_err, d_err)
 
+				if self.converge_exp == True and np.abs(g_error.item() - d_error.item()) < 1e-3 and len(self.samples) < 5 and epoch > 2000:
+					self.samples.append(self.generate_data(100))
+
 			self.plot(g_err, d_err)
+
+			if self.converge_exp == True: return np.asarray(self.samples)
+
 
 	def generate_data(self, num_samples):
 		# working on getting this into the right form (currently outputing a list of tensors)

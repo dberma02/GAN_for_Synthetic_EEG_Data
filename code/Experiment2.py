@@ -23,9 +23,6 @@ import GAN
 from sklearn.neural_network import MLPClassifier
 
 
-# In[5]:
-
-
 def load_data(train_size, test_size):                                              
 	keep_channels=['C3']
 	trial_len = 1.5
@@ -51,19 +48,14 @@ def load_data(train_size, test_size):
 	return X_train, X_test, y_train, y_test
 
 
-# In[3]:
-
 
 def shuffle(X, y):                                                              
-	shape = X.shape[0]
+	shape = X.shape[1]
 	data = np.c_[X, y]
 
 	np.random.shuffle(data)
 
-	return data[:shape], data[-1]
-
-
-# In[4]:
+	return data[:, :shape], data[:, shape]
 
 
 def train_GAN(X_train, y_train, sample_num):
@@ -71,9 +63,6 @@ def train_GAN(X_train, y_train, sample_num):
 					   d_in=X_train.shape[1], d_hid=10, d_out=1)
 		gan.train(10000)
 		return gan.generate_data(sample_num).reshape((100,90))
-
-# In[7]:
-
 
 def classify(estim,X_test, y_test):
 	score = estim.score(X_test, y_test)
@@ -94,22 +83,19 @@ def find_best_clf(X_train, y_train, X_test, y_test):
 	clf.fit(X_train, y_train)
 	bestsvc = clf.best_estimator_
 	svc_score = bestsvc.score(X_test, y_test)
-	print("svc", svc_score)
+	#print("svc", svc_score)
 	#########
 
 
 	##########
 
 	nn = MLPClassifier()
-	params = {'activation': ("logistic", "tanh", "relu"), 'solver': ('sgd', 'adam'), 'alpha': [.001, .01, .1, 1, 10]}
+	params = {'activation': ("logistic",  "relu"), 'solver': ('sgd', 'adam'), 'alpha': [.001, .01, .1, 1, 10]}
 	clfnn = GridSearchCV(nn, params, cv=5)
 	clfnn.fit(X_train, y_train)
 	bestnn = clfnn.best_estimator_
-	#sortnn = sorted(clfnn.cv_results_.keys())
 	nn_score = bestnn.score(X_test, y_test)
-	print("nn", bestnn.score(X_test, y_test))
-
-	#bestnn = MLPClassifier(activation='logistic', alpha = .01, solver='sgd')
+	#print("nn", bestnn.score(X_test, y_test))
 
 	if nn_score > svc_score: return bestnn
 	else: return bestsvc
@@ -145,6 +131,7 @@ for i in range(5):
 		#print(GAN_data.shape)
 		GANX = np.append(GAN_data, X_train, axis=0)
 		GANY = np.append(GAN_labels, y_train)
+		GANX, GANY = shuffle(GANX, GANY)
 
 		# condition 1: train linear classifier on augmented data
 		clf_aug = find_best_clf(GANX, GANY, X_test, y_test)
@@ -161,12 +148,11 @@ r_m = np.mean(real_mean, axis=0)
 a_m = np.mean(aug_mean, axis=0)
 
 plt.title('Accuracy on Test of Real and Augmented training datasets')
-plt.plot(aug_scores, 'r--', label='Augmented dataset')
-plt.plot(real_scores,'b--',label='Real dataset')
+plt.plot(a_m, 'r--', label='Augmented dataset')
+plt.plot(r_m,'b--',label='Real dataset')
 plt.legend()
 plt.show()
 
-# In[ ]:
 
 
 
