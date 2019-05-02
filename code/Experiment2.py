@@ -114,43 +114,51 @@ def find_best_clf(X_train, y_train, X_test, y_test):
 	if nn_score > svc_score: return bestnn
 	else: return bestsvc
 
-sizes = [.9, .8, .7, .6]
+# take the average performance over 5 iterations
+sizes = [.9, .8, .7, .6, .5]
+real_mean = []
+aug_mean = []
 real_scores = []
 aug_scores = []
+for i in range(5):
+	for s in sizes:
+		X_train, X_test, y_train, y_test = load_data(s, 1 - s)
 
-for s in sizes:
-	X_train, X_test, y_train, y_test = load_data(s, 1 - s)
+		# condition 0: baseline accuracy with real data
+		clf = find_best_clf(X_train, y_train, X_test, y_test)
+		real_score = classify(clf, X_test, y_test)
+		left_X, left_y = X_train[y_train == 0], y_train[y_train == 0]
+		right_X, right_y = X_train[y_train == 1], y_train[y_train == 1]
 
-	# condition 0: baseline accuracy with real data
-	clf = find_best_clf(X_train, y_train, X_test, y_test)
-	real_score = classify(clf, X_test, y_test)
-	left_X, left_y = X_train[y_train == 0], y_train[y_train == 0]
-	right_X, right_y = X_train[y_train == 1], y_train[y_train == 1]
+		print("left")
+		left_GAN = train_GAN(left_X, left_y, 100)
 
-	print("left")
-	left_GAN = train_GAN(left_X, left_y, 100)
+		print("right")
+		right_GAN = train_GAN(right_X, right_y, 100)
 
-	print("right")
-	right_GAN = train_GAN(right_X, right_y, 100)
+		GAN_data = np.append(right_GAN, left_GAN, axis=0)
+		GAN_labels = np.append(np.ones(100), np.zeros(100))
 
-	GAN_data = np.append(right_GAN, left_GAN, axis=0)
-	GAN_labels = np.append(np.ones(100), np.zeros(100))
+		# measure difference between left and right sample means from real data
+		sample_mean_diff(left_GAN, left_X, right_GAN, right_X)
 
-	# measure difference between left and right sample means from real data
-	sample_mean_diff(left_GAN, left_X, right_GAN, right_X)
+		#print(GAN_data.shape)
+		GANX = np.append(GAN_data, X_train, axis=0)
+		GANY = np.append(GAN_labels, y_train)
 
-	#print(GAN_data.shape)
-	GANX = np.append(GAN_data, X_train, axis=0)
-	GANY = np.append(GAN_labels, y_train)
+		# condition 1: train linear classifier on augmented data
+		clf_aug = find_best_clf(GANX, GANY, X_test, y_test)
+		aug_score = classify(clf_aug, X_test, y_test)
 
-	# condition 1: train linear classifier on augmented data
-	clf_aug = find_best_clf(GANX, GANY, X_test, y_test)
-	aug_score = classify(clf_aug, X_test, y_test)
+		print("Augmented data:", aug_score)
+		print("Real data:", real_score)
+		aug_scores.append(aug_score)
+		real_scores.append(real_score)
+	aug_mean.append(aug_scores)
+	real_mean.append(real_scores)
 
-	print("Augmented data:", aug_score)
-	print("Real data:", real_score)
-	aug_scores.append(aug_score)
-	real_scores.append(real_score)
+r_m = np.mean(real_mean, axis=0)
+a_m = np.mean(aug_mean, axis=0)
 
 plt.title('Accuracy on Test of Real and Augmented training datasets')
 plt.plot(aug_scores, 'r--', label='Augmented dataset')
