@@ -1,7 +1,11 @@
-#!/usr/bin/env python
-# coding: utf-8
+"""
+In this experiment, we compare accuracy achieved between the baseline (the real dataset)
+and an augmented dataset. The independent variable of this experiment is different training sizes.
+We have two linear classifiers, one to classify the baseline dataset and the other to classify
+the augmented data set. We run model selection for both models at every training size.
+We have 3 trials and plot the average of the results over 3 trials.
 
-# In[9]:
+"""
 
 
 
@@ -47,8 +51,6 @@ def load_data(train_size, test_size):
 
 	return X_train, X_test, y_train, y_test
 
-
-
 def shuffle(X, y):                                                              
 	shape = X.shape[1]
 	data = np.c_[X, y]
@@ -66,7 +68,7 @@ def train_GAN(X_train, y_train, sample_num):
 
 def classify(estim,X_test, y_test):
 	score = estim.score(X_test, y_test)
-	print(score)
+	#print(score)
 	return score
 
 def sample_mean_diff(fake_left, true_left, fake_right, true_right):
@@ -104,10 +106,12 @@ def find_best_clf(X_train, y_train, X_test, y_test):
 sizes = [.9, .8, .7, .6, .5]
 real_mean = []
 aug_mean = []
-real_scores = []
-aug_scores = []
-for i in range(5):
+
+for i in range(3):
+	real_scores = []
+	aug_scores = []
 	for s in sizes:
+		print(s)
 		X_train, X_test, y_train, y_test = load_data(s, 1 - s)
 
 		# condition 0: baseline accuracy with real data
@@ -116,17 +120,17 @@ for i in range(5):
 		left_X, left_y = X_train[y_train == 0], y_train[y_train == 0]
 		right_X, right_y = X_train[y_train == 1], y_train[y_train == 1]
 
-		print("left")
+		#print("left")
 		left_GAN = train_GAN(left_X, left_y, 100)
 
-		print("right")
+		#print("right")
 		right_GAN = train_GAN(right_X, right_y, 100)
 
 		GAN_data = np.append(right_GAN, left_GAN, axis=0)
 		GAN_labels = np.append(np.ones(100), np.zeros(100))
 
 		# measure difference between left and right sample means from real data
-		sample_mean_diff(left_GAN, left_X, right_GAN, right_X)
+		#sample_mean_diff(left_GAN, left_X, right_GAN, right_X)
 
 		#print(GAN_data.shape)
 		GANX = np.append(GAN_data, X_train, axis=0)
@@ -143,6 +147,8 @@ for i in range(5):
 		real_scores.append(real_score)
 	aug_mean.append(aug_scores)
 	real_mean.append(real_scores)
+	print(aug_mean)
+	print(real_mean)
 
 r_m = np.mean(real_mean, axis=0)
 a_m = np.mean(aug_mean, axis=0)

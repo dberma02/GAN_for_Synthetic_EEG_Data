@@ -260,15 +260,15 @@ class GAN(object):
 				g_err.append(g_error.item())
 				d_err.append(d_error.item())
 
-				if display_progress and (epoch % 250 == 0):
+				if display_progress and (epoch % 1000 == 0):
 					test_samples = self.G.forward(static_noise).detach().numpy()
 					self.progress(test_samples, epoch)
-					self.plot(g_err, d_err)
+					#self.plot(g_err, d_err)
 
 				if self.converge_exp == True and np.abs(g_error.item() - d_error.item()) < 1e-3 and len(self.samples) < 5 and epoch > 2000:
 					self.samples.append(self.generate_data(100))
 
-			self.plot(g_err, d_err)
+			#self.plot(g_err, d_err)
 
 			if self.converge_exp == True: return np.asarray(self.samples)
 
